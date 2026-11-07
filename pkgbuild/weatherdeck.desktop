@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Weatherdeck
+Comment=A keyboard-first weather dashboard
+Exec=weatherdeck
+Icon=weatherdeck
+Terminal=false
+Categories=Utility;
+StartupWMClass=weatherdeck
