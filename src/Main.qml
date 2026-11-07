@@ -203,16 +203,20 @@ ApplicationWindow {
                         border.color: searchField.activeFocus ? theme.accent : theme.border
                         border.width: searchField.activeFocus ? 2 : 1
                     }
-                    // Results dropdown
-                    Rectangle {
-                        visible: backend.searchResults.length > 0 && searchField.text.length >= 2
-                        width: parent.width; y: parent.height + 6; z: 60
+                    // Results dropdown (a Popup so it renders above all other content)
+                    Popup {
+                        y: searchField.height + 6
+                        width: searchField.width
                         height: Math.min(280, backend.searchResults.length * 34 + 16)
-                        color: theme.surface; radius: theme.radius
-                        border.color: theme.accent; border.width: 1
-                        ListView {
+                        padding: 8
+                        visible: backend.searchResults.length > 0 && searchField.text.length >= 2 && searchField.activeFocus
+                        background: Rectangle {
+                            color: theme.surface; radius: theme.radius
+                            border.color: theme.accent; border.width: 1
+                        }
+                        contentItem: ListView {
                             id: resultsList
-                            anchors.fill: parent; anchors.margins: 8; clip: true
+                            clip: true
                             model: backend.searchResults
                             delegate: Rectangle {
                                 width: resultsList.width; height: 30
@@ -224,7 +228,6 @@ ApplicationWindow {
                                 }
                                 MouseArea { id: resultHover; hoverEnabled: true; anchors.fill: parent; onClicked: win.selectSearch(index) }
                             }
-                            Text { visible: backend.searchResults.length === 0; anchors.centerIn: parent; text: qsTr("No results"); color: theme.textFaint; font.family: "monospace"; font.pixelSize: 12 }
                         }
                     }
                 }
