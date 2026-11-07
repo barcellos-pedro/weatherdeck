@@ -5,4 +5,4 @@ mkdir -p "$ROOT/build/tests"
 cd "$ROOT/build/tests"
 qmake6 "$ROOT/tests/weatherdeck_tests.pro"
 make -j"$(nproc)"
-QT_QPA_PLATFORM=offscreen ./weatherdeck_tests
+QT_QPA_PLATFORM=offscreen QT_QPA_PLATFORMTHEME=generic ./weatherdeck_tests

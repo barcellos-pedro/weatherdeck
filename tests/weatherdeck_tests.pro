@@ -3,5 +3,7 @@ CONFIG += c++17 testcase
 TARGET = weatherdeck_tests
 TEMPLATE = app
 INCLUDEPATH += ../src
-HEADERS += ../src/backend.h
-SOURCES += weatherdeck_tests.cpp ../src/backend.cpp
+HEADERS += ../src/backend.h \
+           ../src/location.h ../src/dashboard_model.h ../src/dashboard_state.h
+SOURCES += weatherdeck_tests.cpp ../src/backend.cpp \
+           ../src/dashboard_model.cpp ../src/dashboard_state.cpp

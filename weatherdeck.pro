@@ -4,6 +4,8 @@ CONFIG += c++17 release
 TARGET = weatherdeck
 TEMPLATE = app
 
-HEADERS += src/backend.h src/theme.h src/translator.h
-SOURCES += src/main.cpp src/backend.cpp src/theme.cpp src/translator.cpp
+HEADERS += src/backend.h src/theme.h src/translator.h \
+           src/location.h src/dashboard_model.h src/dashboard_state.h
+SOURCES += src/main.cpp src/backend.cpp src/theme.cpp src/translator.cpp \
+           src/dashboard_model.cpp src/dashboard_state.cpp
 RESOURCES += src/resources.qrc
