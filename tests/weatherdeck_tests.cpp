@@ -1,6 +1,7 @@
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QQuickWindow>
+#include <QRegularExpression>
 #include <QtTest>
 #include "backend.h"
 #include "dashboard_model.h"
@@ -741,6 +742,15 @@ private slots:
         if (qEnvironmentVariableIsSet("WEATHERDECK_SNAPSHOT")) {
             auto *window = qobject_cast<QQuickWindow *>(engine.rootObjects().first());
             if (window) {
+                // Optional size override to check cramped layouts (WEATHERDECK_WINDOW=WxH)
+                if (qEnvironmentVariableIsSet("WEATHERDECK_WINDOW")) {
+                    const QRegularExpression rx("^\\s*(\\d+)x(\\d+)\\s*$");
+                    const auto m = rx.match(QString::fromLocal8Bit(qgetenv("WEATHERDECK_WINDOW")));
+                    if (m.hasMatch() && m.capturedTexts().size() >= 3) {
+                        window->setWidth(m.captured(1).toInt());
+                        window->setHeight(m.captured(2).toInt());
+                    }
+                }
                 QTest::qWait(300); // Let async image loads and layouts settle
                 const QImage shot = window->grabWindow();
                 QVERIFY(!shot.isNull());

@@ -5,7 +5,7 @@ import QtQuick.Layouts
 
 ApplicationWindow {
     id: win
-    width: 1240; height: 740; minimumWidth: 1020; minimumHeight: 620; visible: true
+    width: 1240; height: 740; minimumWidth: 1020; minimumHeight: 700; visible: true
     title: qsTr("Weatherdeck"); color: theme.bg
     Material.theme: Material.Dark; Material.accent: theme.accent
     property bool helpOpen: false
@@ -86,7 +86,7 @@ ApplicationWindow {
         default property alias content: slot.data
         color: theme.surface; radius: theme.radius
         border.color: theme.border; border.width: 1
-        Item { id: slot; anchors.fill: parent; anchors.margins: 14 }
+        Item { id: slot; anchors.fill: parent; anchors.margins: 14; clip: true }
     }
     component PanelTitle: Text {
         font.family: "monospace"; font.pixelSize: 12; font.bold: true
@@ -151,7 +151,7 @@ ApplicationWindow {
     }
     component Metric: Column {
         property string label; property string value; property color valueColor: theme.textBright
-        spacing: 5
+        spacing: 4
         Text { text: parent.label; color: theme.textFaint; font.family: "monospace"; font.pixelSize: 12 }
         Text { text: parent.value; color: parent.valueColor; font.family: "monospace"; font.pixelSize: 16 }
     }
@@ -276,7 +276,7 @@ ApplicationWindow {
             ColumnLayout { Layout.preferredWidth: 340; Layout.maximumWidth: 380; Layout.minimumWidth: 300; Layout.fillHeight: true; spacing: 10
 
                 Panel { Layout.fillWidth: true; Layout.fillHeight: true
-                    ColumnLayout { anchors.fill: parent; spacing: 10
+                    ColumnLayout { anchors.fill: parent; spacing: 8
                         PanelTitle { text: qsTr("ACTIVE LOCATION") }
                         RowLayout { Layout.fillWidth: true; spacing: 6
                             Text {
@@ -297,11 +297,11 @@ ApplicationWindow {
                             Text {
                                 Layout.alignment: Qt.AlignVCenter
                                 text: win.dataReady ? Number(backend.dashboard.current.temp).toFixed(0) + backend.dashboard.current.tempUnit : "--"
-                                color: theme.textBright; font.family: "monospace"; font.pixelSize: 62; font.bold: true
+                                color: theme.textBright; font.family: "monospace"; font.pixelSize: 54; font.bold: true
                             }
                             Item { Layout.fillWidth: true }
                             PixelIcon {
-                                Layout.preferredHeight: 92; Layout.preferredWidth: 92
+                                Layout.preferredHeight: 76; Layout.preferredWidth: 76
                                 Layout.alignment: Qt.AlignVCenter
                                 iconKey: win.dataReady ? backend.dashboard.current.iconKey : ""
                                 visible: iconKey.length > 0
@@ -313,7 +313,7 @@ ApplicationWindow {
                             color: theme.textDim; font.family: "monospace"; font.pixelSize: 13
                         }
                         Item { Layout.fillHeight: true }
-                        GridLayout { Layout.fillWidth: true; columns: 2; columnSpacing: 16; rowSpacing: 12
+                        GridLayout { Layout.fillWidth: true; columns: 2; columnSpacing: 16; rowSpacing: 8
                             Metric { label: qsTr("Apparent Temp"); value: win.dataReady ? Number(backend.dashboard.current.feels).toFixed(0) + backend.dashboard.current.tempUnit : "--" }
                             Metric { label: qsTr("Humidity"); value: win.dataReady ? Number(backend.dashboard.current.humidity).toFixed(0) + "%" : "--" }
                             Metric { label: qsTr("Precipitation"); value: win.dataReady ? Number(backend.dashboard.current.rain).toFixed(1) + " mm" : "--" }
@@ -498,55 +498,56 @@ ApplicationWindow {
                             text: qsTr("Waiting for 7-day data…")
                             color: theme.textFaint; font.family: "monospace"; font.pixelSize: 13
                         }
-                        ColumnLayout {
+                        // Clipped + scrollable so rows never spill past the card
+                        ListView {
                             visible: backend.dashboard.daily.length > 0
-                            Layout.fillWidth: true; Layout.fillHeight: true; spacing: 3
-                            Repeater {
-                                model: backend.dashboard.daily
-                                delegate: RowLayout {
-                                    Layout.fillWidth: true
-                                    spacing: 10
-                                    Text {
-                                        text: Qt.formatDate(new Date(modelData.date + "T12:00:00"), "ddd")
-                                        color: theme.textDim; font.family: "monospace"; font.pixelSize: 13
-                                        Layout.preferredWidth: 44
-                                    }
-                                    PixelIcon { iconKey: modelData.iconKey; Layout.preferredWidth: 24; Layout.preferredHeight: 24 }
-                                    Image { source: "qrc:/icons/drop.png"; smooth: false; visible: modelData.rain >= 10; Layout.preferredWidth: 10; Layout.preferredHeight: 10 }
-                                    Text {
-                                        text: Math.round(modelData.rain) + "%"
-                                        visible: modelData.rain >= 10
-                                        color: popColor(modelData.rain); font.family: "monospace"; font.pixelSize: 11
-                                        Layout.preferredWidth: 34
-                                    }
-                                    Text {
-                                        text: Number(modelData.min).toFixed(0) + "°"
-                                        color: theme.textDim; font.family: "monospace"; font.pixelSize: 13
-                                        Layout.alignment: Qt.AlignRight
-                                        Layout.preferredWidth: 34
-                                    }
-                                    // Temperature range gutter: track + segment positioned by weekly bounds
+                            Layout.fillWidth: true; Layout.fillHeight: true
+                            clip: true
+                            spacing: 3
+                            model: backend.dashboard.daily
+                            delegate: RowLayout {
+                                width: ListView.view.width
+                                spacing: 10
+                                Text {
+                                    text: Qt.formatDate(new Date(modelData.date + "T12:00:00"), "ddd")
+                                    color: theme.textDim; font.family: "monospace"; font.pixelSize: 13
+                                    Layout.preferredWidth: 44
+                                }
+                                PixelIcon { iconKey: modelData.iconKey; Layout.preferredWidth: 24; Layout.preferredHeight: 24 }
+                                Image { source: "qrc:/icons/drop.png"; smooth: false; visible: modelData.rain >= 10; Layout.preferredWidth: 10; Layout.preferredHeight: 10 }
+                                Text {
+                                    text: Math.round(modelData.rain) + "%"
+                                    visible: modelData.rain >= 10
+                                    color: popColor(modelData.rain); font.family: "monospace"; font.pixelSize: 11
+                                    Layout.preferredWidth: 34
+                                }
+                                Text {
+                                    text: Number(modelData.min).toFixed(0) + "°"
+                                    color: theme.textDim; font.family: "monospace"; font.pixelSize: 13
+                                    Layout.alignment: Qt.AlignRight
+                                    Layout.preferredWidth: 34
+                                }
+                                // Temperature range gutter: track + segment positioned by weekly bounds
+                                Rectangle {
+                                    Layout.fillWidth: true; Layout.preferredHeight: 8
+                                    radius: 4; color: theme.bg
+                                    border.color: theme.border; border.width: 1
                                     Rectangle {
-                                        Layout.fillWidth: true; Layout.preferredHeight: 8
-                                        radius: 4; color: theme.bg
-                                        border.color: theme.border; border.width: 1
-                                        Rectangle {
-                                            anchors.verticalCenter: parent.verticalCenter
-                                            x: parent.width * Math.min(1, Math.max(0, (modelData.min - win.weekMin) / win.weekRange))
-                                            width: Math.max(6, parent.width * Math.max(0.02, (modelData.max - modelData.min) / win.weekRange))
-                                            height: parent.height - 2; radius: 3
-                                            gradient: Gradient {
-                                                orientation: Gradient.Horizontal
-                                                GradientStop { position: 0.0; color: theme.fair }
-                                                GradientStop { position: 1.0; color: theme.good }
-                                            }
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        x: parent.width * Math.min(1, Math.max(0, (modelData.min - win.weekMin) / win.weekRange))
+                                        width: Math.max(6, parent.width * Math.max(0.02, (modelData.max - modelData.min) / win.weekRange))
+                                        height: parent.height - 2; radius: 3
+                                        gradient: Gradient {
+                                            orientation: Gradient.Horizontal
+                                            GradientStop { position: 0.0; color: theme.fair }
+                                            GradientStop { position: 1.0; color: theme.good }
                                         }
                                     }
-                                    Text {
-                                        text: Number(modelData.max).toFixed(0) + "°"
-                                        color: theme.textBright; font.family: "monospace"; font.pixelSize: 13
-                                        Layout.preferredWidth: 34
-                                    }
+                                }
+                                Text {
+                                    text: Number(modelData.max).toFixed(0) + "°"
+                                    color: theme.textBright; font.family: "monospace"; font.pixelSize: 13
+                                    Layout.preferredWidth: 34
                                 }
                             }
                         }
