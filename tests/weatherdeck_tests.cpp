@@ -1,3 +1,5 @@
+#include <QQmlApplicationEngine>
+#include <QQmlContext>
 #include <QtTest>
 #include "backend.h"
 #include "dashboard_model.h"
@@ -5,6 +7,8 @@
 #include "dashboard_state.h"
 #include "location.h"
 #include "saved_locations.h"
+#include "theme.h"
+#include "translator.h"
 #include "weather_acquisition.h"
 
 class WeatherdeckTests : public QObject {
@@ -458,6 +462,99 @@ private slots:
             QCOMPARE(fresh.pins()[0].name, QString("Milan"));
             QVERIFY(fresh.fahrenheit());
         }
+    }
+
+    void mediatorSelectedLocationTriggersSnapshot() {
+        auto *fake = new FakeWeatherAcquisition();
+        auto *storage = new InMemoryLocationStorage();
+
+        const QByteArray forecastJson = R"({
+            "current": {"temperature_2m": 22.0, "weather_code": 0},
+            "hourly": {"time": []},
+            "daily": {"time": []}
+        })";
+        fake->setForecastResponse(true, forecastJson);
+
+        Location searchLoc;
+        searchLoc.name = "Oslo";
+        searchLoc.country = "Norway";
+        searchLoc.lat = 59.91;
+        searchLoc.lon = 10.75;
+        fake->setSearchResponse(true, {searchLoc});
+
+        Backend backend(fake, storage);
+
+        backend.search("Oslo");
+        QTest::qWait(250); // Allow debounced search timer to trigger
+        backend.selectSearchResult(0);
+
+        // After selection, backend coordinates snapshot
+        QCOMPARE(backend.dashboard()->locationName(), QString("Oslo, Norway"));
+        QCOMPARE(backend.dashboard()->current().temp, 22.0);
+    }
+
+    void mediatorUnitChangeRequestsSnapshot() {
+        auto *fake = new FakeWeatherAcquisition();
+        auto *storage = new InMemoryLocationStorage();
+
+        const QByteArray forecastJson = R"({
+            "current": {"temperature_2m": 20.0, "weather_code": 0},
+            "hourly": {"time": []},
+            "daily": {"time": []}
+        })";
+        fake->setForecastResponse(true, forecastJson);
+
+        Location loc;
+        loc.name = "London";
+        loc.lat = 51.5;
+        loc.lon = -0.12;
+        storage->saveCurrent(loc);
+
+        Backend backend(fake, storage);
+        QCOMPARE(fake->forecastCallCount(), 1);
+        QVERIFY(!backend.dashboard()->fahrenheit());
+
+        backend.toggleUnits();
+        QVERIFY(backend.dashboard()->fahrenheit());
+        // Toggle units requests a new snapshot with the new unit
+        QCOMPARE(fake->forecastCallCount(), 2);
+    }
+
+    void offscreenQmlLoad() {
+        auto *fake = new FakeWeatherAcquisition();
+        auto *storage = new InMemoryLocationStorage();
+
+        const QByteArray forecastJson = R"({
+            "current": {"temperature_2m": 21.0, "apparent_temperature": 20.0, "relative_humidity_2m": 60, "precipitation": 0.0, "wind_speed_10m": 10.0, "weather_code": 0},
+            "current_units": {"temperature_2m": "°C", "wind_speed_10m": "km/h"},
+            "hourly": {"time": ["2026-01-01T00:00"], "weather_code": [0], "temperature_2m": [21.0], "precipitation_probability": [0], "relative_humidity_2m": [60], "uv_index": [0]},
+            "daily": {"time": ["2026-01-01"], "weather_code": [0], "temperature_2m_max": [25.0], "temperature_2m_min": [15.0], "precipitation_probability_max": [0], "uv_index_max": [2]}
+        })";
+        const QByteArray airJson = R"({"current": {"european_aqi": 30.0, "pm2_5": 7.5}})";
+        fake->setForecastResponse(true, forecastJson);
+        fake->setAirQualityResponse(true, airJson);
+
+        Location loc;
+        loc.name = "Stockholm";
+        loc.country = "Sweden";
+        loc.lat = 59.32;
+        loc.lon = 18.06;
+        storage->saveCurrent(loc);
+
+        Translator translator;
+        Theme theme;
+        Backend backend(fake, storage);
+
+        QQmlApplicationEngine engine;
+        engine.rootContext()->setContextProperty("translator", &translator);
+        engine.rootContext()->setContextProperty("theme", &theme);
+        engine.rootContext()->setContextProperty("backend", &backend);
+
+        engine.load(QUrl("qrc:/Main.qml"));
+
+        QCOMPARE(engine.rootObjects().size(), 1);
+        QVERIFY(backend.dashboard()->current().valid);
+        QCOMPARE(backend.dashboard()->locationName(), QString("Stockholm, Sweden"));
     }
 };
 

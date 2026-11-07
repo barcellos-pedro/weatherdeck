@@ -21,36 +21,36 @@ ApplicationWindow {
     component Frame: Rectangle { color: "#17171c"; border.color: "#c47b82"; border.width: 1; radius: Math.min(4, theme.radius); default property alias content: slot.data; Item { id: slot; anchors.fill: parent; anchors.margins: 16 } }
     component LabelValue: Row { required property string label; required property string value; spacing: 6; Text { text: label; color: "#bdb7bd"; font.family: "monospace"; font.pixelSize: 13 } Text { text: "........................"; color: "#51474c"; font.family: "monospace"; font.pixelSize: 13; elide: Text.ElideRight; width: Math.max(20, parent.width - 165) } Text { text: value; color: "#f1ddd8"; font.family: "monospace"; font.pixelSize: 13 } }
     ColumnLayout { anchors.fill: parent; anchors.margins: 18; spacing: 12
-        RowLayout { Layout.fillWidth: true; Text { text: "◈ WEATHERDECK"; color: "#e4a0a5"; font.bold: true; font.family: "monospace"; font.pixelSize: 17 } Item { Layout.fillWidth: true } Text { text: backend.locationName || qsTr("No location selected"); color: "#f4e9e5"; font.family: "monospace" } Text { text: backend.updated ? qsTr("updated %1").arg(backend.updated) : ""; color: "#8e888d"; font.family: "monospace" } Text { text: backend.fahrenheit ? "°F / mph" : "°C / km/h"; color: "#d3ab68"; font.family: "monospace" } }
-        Text { visible: backend.status.length > 0; text: backend.status; color: "#d3ab68"; font.family: "monospace"; Layout.fillWidth: true; horizontalAlignment: Text.AlignHCenter }
+        RowLayout { Layout.fillWidth: true; Text { text: "◈ WEATHERDECK"; color: "#e4a0a5"; font.bold: true; font.family: "monospace"; font.pixelSize: 17 } Item { Layout.fillWidth: true } Text { text: backend.dashboard.locationName || qsTr("No location selected"); color: "#f4e9e5"; font.family: "monospace" } Text { text: backend.dashboard.updated ? qsTr("updated %1").arg(backend.dashboard.updated) : ""; color: "#8e888d"; font.family: "monospace" } Text { text: backend.dashboard.fahrenheit ? "°F / mph" : "°C / km/h"; color: "#d3ab68"; font.family: "monospace" } }
+        Text { visible: backend.dashboard.status.length > 0; text: backend.dashboard.status; color: "#d3ab68"; font.family: "monospace"; Layout.fillWidth: true; horizontalAlignment: Text.AlignHCenter }
         RowLayout { Layout.fillWidth: true; Layout.fillHeight: true; spacing: 12
             Frame { Layout.preferredWidth: 355; Layout.fillHeight: true
                 Column { anchors.fill: parent; spacing: 14
                     Text { text: qsTr("CURRENT CONDITIONS"); color: "#e4a0a5"; font.bold: true; font.family: "monospace" }
-                    Row { spacing: 15; Text { text: backend.weather.glyph || "…"; color: "#d3ab68"; font.pixelSize: 58 } Column { Text { text: backend.weather.temp !== undefined ? Number(backend.weather.temp).toFixed(0)+backend.weather.tempUnit : "--"; color: "#f7f1ee"; font.pixelSize: 42; font.family: "monospace" } Text { text: backend.weather.condition || qsTr("Loading"); color: "#bdb7bd"; font.family: "monospace" } } }
-                    LabelValue { width: parent.width; label: qsTr("FEELS LIKE"); value: backend.weather.feels !== undefined ? Number(backend.weather.feels).toFixed(0)+backend.weather.tempUnit : "--" }
-                    LabelValue { width: parent.width; label: qsTr("WIND"); value: backend.weather.wind !== undefined ? Number(backend.weather.wind).toFixed(0)+" "+backend.weather.windUnit : "--" }
-                    LabelValue { width: parent.width; label: qsTr("HUMIDITY"); value: backend.weather.humidity !== undefined ? win.bar(backend.weather.humidity,100)+" "+backend.weather.humidity+"%" : "--" }
-                    LabelValue { width: parent.width; label: qsTr("PRECIP"); value: backend.weather.rain !== undefined ? Number(backend.weather.rain).toFixed(1)+" mm" : "--" }
+                    Row { spacing: 15; Text { text: backend.dashboard.current.valid ? backend.dashboard.current.glyph : "…"; color: "#d3ab68"; font.pixelSize: 58 } Column { Text { text: backend.dashboard.current.valid ? Number(backend.dashboard.current.temp).toFixed(0)+backend.dashboard.current.tempUnit : "--"; color: "#f7f1ee"; font.pixelSize: 42; font.family: "monospace" } Text { text: backend.dashboard.current.valid ? backend.dashboard.current.condition : qsTr("Loading"); color: "#bdb7bd"; font.family: "monospace" } } }
+                    LabelValue { width: parent.width; label: qsTr("FEELS LIKE"); value: backend.dashboard.current.valid ? Number(backend.dashboard.current.feels).toFixed(0)+backend.dashboard.current.tempUnit : "--" }
+                    LabelValue { width: parent.width; label: qsTr("WIND"); value: backend.dashboard.current.valid ? Number(backend.dashboard.current.wind).toFixed(0)+" "+backend.dashboard.current.windUnit : "--" }
+                    LabelValue { width: parent.width; label: qsTr("HUMIDITY"); value: backend.dashboard.current.valid ? win.bar(backend.dashboard.current.humidity,100)+" "+backend.dashboard.current.humidity+"%" : "--" }
+                    LabelValue { width: parent.width; label: qsTr("PRECIP"); value: backend.dashboard.current.valid ? Number(backend.dashboard.current.rain).toFixed(1)+" mm" : "--" }
                     Rectangle { width: parent.width; height: 1; color: "#51474c" }
                     Text { text: qsTr("ENVIRONMENT"); color: "#e4a0a5"; font.bold: true; font.family: "monospace" }
-                    LabelValue { width: parent.width; label: qsTr("AIR QUALITY"); value: backend.weather.aqi !== undefined ? Math.round(backend.weather.aqi)+" AQI" : "--" }
-                    LabelValue { width: parent.width; label: "PM2.5"; value: backend.weather.pm25 !== undefined ? Number(backend.weather.pm25).toFixed(1)+" µg/m³" : "--" }
+                    LabelValue { width: parent.width; label: qsTr("AIR QUALITY"); value: backend.dashboard.airQuality.available ? Math.round(backend.dashboard.airQuality.aqi)+" AQI" : "--" }
+                    LabelValue { width: parent.width; label: "PM2.5"; value: backend.dashboard.airQuality.available ? Number(backend.dashboard.airQuality.pm25).toFixed(1)+" µg/m³" : "--" }
                 }
             }
             ColumnLayout { Layout.fillWidth: true; Layout.fillHeight: true; spacing: 12
                 Frame { Layout.fillWidth: true; Layout.preferredHeight: 290
                     Column { anchors.fill: parent; spacing: 10; Text { text: qsTr("NEXT 24 HOURS"); color: "#e4a0a5"; font.bold: true; font.family: "monospace" }
-                        ListView { width: parent.width; height: 220; orientation: ListView.Horizontal; spacing: 8; clip: true; model: backend.hourly
+                        ListView { width: parent.width; height: 220; orientation: ListView.Horizontal; spacing: 8; clip: true; model: backend.dashboard.hourly
                             delegate: Rectangle { width: 45; height: 210; color: index % 2 ? "#211b2d" : "#17251f"; radius: Math.min(3,theme.radius)
-                                Column { anchors.centerIn: parent; spacing: 7; Text { text: modelData.time; color: "#a49ca2"; font.family: "monospace"; font.pixelSize: 11 } Text { text: modelData.glyph; color: "#d3ab68"; font.pixelSize: 19 } Rectangle { width: 12; height: Math.max(5, Math.min(95, modelData.rain)); color: "#c47b82"; anchors.horizontalCenter: parent.horizontalCenter; anchors.topMargin: 4 } Text { text: Number(modelData.temp).toFixed(0)+backend.weather.tempUnit; color: "#f1ddd8"; font.family: "monospace"; font.pixelSize: 11 } Text { text: modelData.rain+"%"; color: "#a49ca2"; font.family: "monospace"; font.pixelSize: 10 } }
+                                Column { anchors.centerIn: parent; spacing: 7; Text { text: modelData.time; color: "#a49ca2"; font.family: "monospace"; font.pixelSize: 11 } Text { text: modelData.glyph; color: "#d3ab68"; font.pixelSize: 19 } Rectangle { width: 12; height: Math.max(5, Math.min(95, modelData.rain)); color: "#c47b82"; anchors.horizontalCenter: parent.horizontalCenter; anchors.topMargin: 4 } Text { text: Number(modelData.temp).toFixed(0)+backend.dashboard.current.tempUnit; color: "#f1ddd8"; font.family: "monospace"; font.pixelSize: 11 } Text { text: modelData.rain+"%"; color: "#a49ca2"; font.family: "monospace"; font.pixelSize: 10 } }
                             }
                         }
                     }
                 }
                 Frame { Layout.fillWidth: true; Layout.fillHeight: true
                     Column { anchors.fill: parent; spacing: 10; Text { text: qsTr("7-DAY OUTLOOK"); color: "#e4a0a5"; font.bold: true; font.family: "monospace" }
-                        ListView { width: parent.width; height: parent.height-30; orientation: ListView.Horizontal; spacing: 9; model: backend.daily
+                        ListView { width: parent.width; height: parent.height-30; orientation: ListView.Horizontal; spacing: 9; model: backend.dashboard.daily
                             delegate: Rectangle { width: Math.max(92, (parent.width-54)/7); height: parent.height; color: index % 2 ? "#211b2d" : "#17251f"; radius: Math.min(3,theme.radius)
                                 Column { anchors.centerIn: parent; spacing: 7; Text { text: Qt.formatDate(new Date(modelData.date+"T12:00:00"), "ddd"); color: "#c9c1c7"; font.family: "monospace" } Text { text: modelData.glyph; color: "#d3ab68"; font.pixelSize: 24 } Text { text: Number(modelData.max).toFixed(0)+"°"; color: "#f4e9e5"; font.family: "monospace" } Text { text: Number(modelData.min).toFixed(0)+"°"; color: "#928b91"; font.family: "monospace" } Text { text: modelData.rain+"% rain"; color: "#c47b82"; font.family: "monospace"; font.pixelSize: 10 } Text { text: "UV "+Number(modelData.uv).toFixed(0); color: "#d3ab68"; font.family: "monospace"; font.pixelSize: 10 } }
                             }
@@ -59,7 +59,7 @@ ApplicationWindow {
                 }
             }
         }
-        Text { Layout.fillWidth: true; text: "[/] "+qsTr("Search")+"   [r] "+qsTr("Refresh")+"   [c/f] "+qsTr("Toggle units")+"   [p] "+(backend.pinned ? qsTr("Unpin") : qsTr("Pin"))+"   [Tab] "+qsTr("Locations")+"   [?] "+qsTr("Help")+"   [q] "+qsTr("Quit"); color: "#a49ca2"; font.family: "monospace"; horizontalAlignment: Text.AlignHCenter }
+        Text { Layout.fillWidth: true; text: "[/] "+qsTr("Search")+"   [r] "+qsTr("Refresh")+"   [c/f] "+qsTr("Toggle units")+"   [p] "+(backend.dashboard.pinned ? qsTr("Unpin") : qsTr("Pin"))+"   [Tab] "+qsTr("Locations")+"   [?] "+qsTr("Help")+"   [q] "+qsTr("Quit"); color: "#a49ca2"; font.family: "monospace"; horizontalAlignment: Text.AlignHCenter }
     }
     Rectangle { visible: searchOpen; anchors.fill: parent; color: "#000000aa"; z: 5; focus: visible
         Frame { width: Math.min(620,parent.width-50); height: Math.min(480,parent.height-70); anchors.centerIn: parent; color: "#1c1a20"
