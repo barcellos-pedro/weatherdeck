@@ -209,6 +209,7 @@ ApplicationWindow {
                         width: searchField.width
                         height: Math.min(280, backend.searchResults.length * 34 + 16)
                         padding: 8
+                        focus: false
                         visible: backend.searchResults.length > 0 && searchField.text.length >= 2 && searchField.activeFocus
                         background: Rectangle {
                             color: theme.surface; radius: theme.radius
