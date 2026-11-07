@@ -45,10 +45,10 @@ flowchart TD
     SnapshotCoord -->|Fetches network data| WeatherAcquisition
     SavedLocations -->|Persists bookmarks & selection| LocationStorage
 
-    WeatherAcquisition <|.. QtAcq
-    WeatherAcquisition <|.. FakeAcq
-    LocationStorage <|.. QSettingsStore
-    LocationStorage <|.. MemoryStore
+    QtAcq -.->|implements| WeatherAcquisition
+    FakeAcq -.->|implements| WeatherAcquisition
+    QSettingsStore -.->|implements| LocationStorage
+    MemoryStore -.->|implements| LocationStorage
 ```
 
 ---
