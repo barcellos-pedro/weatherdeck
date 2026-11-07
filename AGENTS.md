@@ -2,7 +2,15 @@
 
 ## Project Structure & Module Organization
 
-Weatherdeck is a native Qt 6 / Qt Quick Omarchy application. Keep application logic in the flat `src/` directory: `backend.*` owns networking, state, persistence, and errors; `Main.qml` owns presentation and keyboard interaction; `theme.*` and `translator.*` integrate with Omarchy preferences. QML and translation resources are listed in `src/resources.qrc`.
+Weatherdeck is a native Qt 6 / Qt Quick Omarchy application. Application logic resides in the flat `src/` directory structured around domain modules and abstract seams:
+- `backend.*` — lean presentation mediator facade exposed to QML via `backend`.
+- `dashboard_model.*` & `location.*` — typed domain models (`CurrentConditions`, `HourlyForecast`, `DailyForecast`, `AirQuality`, `Location`) and safe Open-Meteo payload parsers with series alignment checks.
+- `dashboard_state.*` — `DashboardState` QObject carrying the coherent presentation snapshot for QML bindings.
+- `weather_acquisition.*` — acquisition seam (`WeatherAcquisition`) with production `QtWeatherAcquisition` (HTTP via `QNetworkAccessManager`) and `FakeWeatherAcquisition` for deterministic tests.
+- `dashboard_snapshot.*` — `DashboardSnapshotCoordinator` managing generation counters, dropping stale network returns, and handling partial failures.
+- `saved_locations.*` — bookmark manager (`SavedLocations`) with normalized-coordinate deduplication (`%.4f,%.4f`) and persistence seam (`LocationStorage`, `QSettingsLocationStorage`, `InMemoryLocationStorage`).
+- `Main.qml` — presentation view and keyboard navigation binding exclusively to `backend.dashboard`.
+- `theme.*` and `translator.*` — integration with Omarchy system theme and dynamic localization. QML and translation resources are listed in `src/resources.qrc`.
 
 Tests live in `tests/` and compile directly against source files. Packaging is under `pkgbuild/`: `PKGBUILD`, the launcher entry, and the SVG icon. Shell entry points belong in `bin/`. Do not commit generated `build/`, `pkgbuild/pkg/`, `pkgbuild/src/`, or package archives.
 
