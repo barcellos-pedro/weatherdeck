@@ -1,8 +1,10 @@
 #include <QtTest>
 #include "backend.h"
 #include "dashboard_model.h"
+#include "dashboard_snapshot.h"
 #include "dashboard_state.h"
 #include "location.h"
+#include "weather_acquisition.h"
 
 class WeatherdeckTests : public QObject {
     Q_OBJECT
@@ -198,6 +200,161 @@ private slots:
         // Malformed JSON
         QVERIFY(!DashboardModel::parseAirQualityPayload("not a json", &aq, &error));
         QVERIFY(!aq.available);
+    }
+
+    void snapshotSuccess() {
+        FakeWeatherAcquisition fake;
+        const QByteArray forecastJson = R"({
+            "current": {"temperature_2m": 25.0, "weather_code": 0},
+            "hourly": {"time": ["2026-01-01T00:00"], "weather_code": [0], "temperature_2m": [25.0], "precipitation_probability": [0], "relative_humidity_2m": [50], "uv_index": [0]},
+            "daily": {"time": ["2026-01-01"], "weather_code": [0], "temperature_2m_max": [28.0], "temperature_2m_min": [18.0], "precipitation_probability_max": [0], "uv_index_max": [3]}
+        })";
+        const QByteArray airJson = R"({"current": {"european_aqi": 25.0, "pm2_5": 8.0}})";
+        fake.setForecastResponse(true, forecastJson);
+        fake.setAirQualityResponse(true, airJson);
+
+        DashboardSnapshotCoordinator coordinator(&fake);
+        DashboardSnapshotData result;
+        int readyCount = 0;
+        connect(&coordinator, &DashboardSnapshotCoordinator::snapshotReady, [&](const DashboardSnapshotData &data) {
+            result = data;
+            ++readyCount;
+        });
+
+        Location loc;
+        loc.name = "Testville";
+        loc.country = "TC";
+        loc.lat = 10.0;
+        loc.lon = 20.0;
+
+        coordinator.requestSnapshot(loc, false);
+
+        QVERIFY(readyCount > 0);
+        QCOMPARE(result.locationName, QString("Testville, TC"));
+        QCOMPARE(result.current.temp, 25.0);
+        QVERIFY(result.airQuality.available);
+        QCOMPARE(result.airQuality.aqi, 25.0);
+        QCOMPARE(result.airQuality.pm25, 8.0);
+    }
+
+    void snapshotPartialAirQualityFailure() {
+        FakeWeatherAcquisition fake;
+        const QByteArray forecastJson = R"({
+            "current": {"temperature_2m": 18.0, "weather_code": 1},
+            "hourly": {"time": [], "weather_code": [], "temperature_2m": [], "precipitation_probability": [], "relative_humidity_2m": [], "uv_index": []},
+            "daily": {"time": [], "weather_code": [], "temperature_2m_max": [], "temperature_2m_min": [], "precipitation_probability_max": [], "uv_index_max": []}
+        })";
+        fake.setForecastResponse(true, forecastJson);
+        fake.setAirQualityResponse(false, "", "Air API unavailable");
+
+        DashboardSnapshotCoordinator coordinator(&fake);
+        DashboardSnapshotData result;
+        bool ready = false;
+        connect(&coordinator, &DashboardSnapshotCoordinator::snapshotReady, [&](const DashboardSnapshotData &data) {
+            result = data;
+            ready = true;
+        });
+
+        Location loc;
+        loc.name = "CloudCity";
+        loc.lat = 15.0;
+        loc.lon = 25.0;
+
+        coordinator.requestSnapshot(loc, false);
+
+        QVERIFY(ready);
+        QCOMPARE(result.current.temp, 18.0);
+        QVERIFY(!result.airQuality.available);
+    }
+
+    void snapshotFullAcquisitionFailure() {
+        FakeWeatherAcquisition fake;
+        fake.setForecastResponse(false, "", "Connection refused");
+
+        DashboardSnapshotCoordinator coordinator(&fake);
+        QString errorReceived;
+        bool failed = false;
+        bool loading = true;
+        connect(&coordinator, &DashboardSnapshotCoordinator::snapshotFailed, [&](const QString &err) {
+            failed = true;
+            errorReceived = err;
+        });
+        connect(&coordinator, &DashboardSnapshotCoordinator::loadingChanged, [&](bool l) {
+            loading = l;
+        });
+
+        Location loc;
+        loc.name = "FailCity";
+        loc.lat = 1.0;
+        loc.lon = 2.0;
+
+        coordinator.requestSnapshot(loc, false);
+
+        QVERIFY(failed);
+        QCOMPARE(errorReceived, QString("Connection refused"));
+        QVERIFY(!loading);
+    }
+
+    void snapshotManualRefresh() {
+        FakeWeatherAcquisition fake;
+        fake.setForecastResponse(true, R"({"current":{"temperature_2m":20,"weather_code":0},"hourly":{"time":[]},"daily":{"time":[]}})");
+        DashboardSnapshotCoordinator coordinator(&fake);
+
+        Location loc;
+        loc.name = "City";
+        loc.lat = 12.0;
+        loc.lon = 34.0;
+
+        coordinator.requestSnapshot(loc, false);
+        const quint64 gen1 = coordinator.generation();
+
+        coordinator.refresh(loc, false);
+        const quint64 gen2 = coordinator.generation();
+
+        QCOMPARE(gen2, gen1 + 1);
+        QCOMPARE(fake.forecastCallCount(), 2);
+    }
+
+    void snapshotStaleGenerationDiscard() {
+        FakeWeatherAcquisition fake;
+        fake.setDeferCallbacks(true); // Don't invoke callbacks synchronously
+
+        DashboardSnapshotCoordinator coordinator(&fake);
+        QList<QString> emittedLocations;
+        connect(&coordinator, &DashboardSnapshotCoordinator::snapshotReady, [&](const DashboardSnapshotData &data) {
+            emittedLocations.append(data.locationName);
+        });
+
+        Location locA;
+        locA.name = "CityA";
+        locA.lat = 10.0;
+        locA.lon = 10.0;
+
+        Location locB;
+        locB.name = "CityB";
+        locB.lat = 20.0;
+        locB.lon = 20.0;
+
+        // 1. Request Loc A (Generation 1)
+        coordinator.requestSnapshot(locA, false);
+
+        // 2. Request Loc B (Generation 2)
+        coordinator.requestSnapshot(locB, false);
+
+        // Loc A response is returned now (with payload A)
+        fake.setForecastResponse(true, R"({"current":{"temperature_2m":10,"weather_code":0},"hourly":{"time":[]},"daily":{"time":[]}})");
+        fake.triggerNextForecast();
+
+        // Loc A should be discarded because generation 1 is stale!
+        QVERIFY(emittedLocations.isEmpty());
+
+        // Now trigger Loc B (Generation 2)
+        fake.setForecastResponse(true, R"({"current":{"temperature_2m":20,"weather_code":0},"hourly":{"time":[]},"daily":{"time":[]}})");
+        fake.triggerNextForecast();
+
+        // Loc B should be received
+        QCOMPARE(emittedLocations.size(), 1);
+        QCOMPARE(emittedLocations[0], QString("CityB"));
     }
 };
 
