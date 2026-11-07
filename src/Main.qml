@@ -278,8 +278,11 @@ ApplicationWindow {
             // ==== Left column ====
             ColumnLayout { Layout.preferredWidth: 340; Layout.maximumWidth: 380; Layout.minimumWidth: 300; Layout.fillHeight: true; spacing: 10
 
-                Panel { Layout.fillWidth: true; Layout.fillHeight: true
-                    ColumnLayout { anchors.fill: parent; spacing: 8
+                Panel {
+                    id: activePanel
+                    Layout.fillWidth: true; Layout.fillHeight: true
+                    ColumnLayout { anchors.fill: parent; spacing: 6
+                        id: activeCol
                         PanelTitle { text: qsTr("ACTIVE LOCATION") }
                         RowLayout { Layout.fillWidth: true; spacing: 6
                             Text {
@@ -300,11 +303,11 @@ ApplicationWindow {
                             Text {
                                 Layout.alignment: Qt.AlignVCenter
                                 text: win.dataReady ? Number(backend.dashboard.current.temp).toFixed(0) + backend.dashboard.current.tempUnit : "--"
-                                color: theme.textBright; font.family: "monospace"; font.pixelSize: 54; font.bold: true
+                                color: theme.textBright; font.family: "monospace"; font.pixelSize: 48; font.bold: true
                             }
                             Item { Layout.fillWidth: true }
                             PixelIcon {
-                                Layout.preferredHeight: 76; Layout.preferredWidth: 76
+                                Layout.preferredHeight: 70; Layout.preferredWidth: 70
                                 Layout.alignment: Qt.AlignVCenter
                                 iconKey: win.dataReady ? backend.dashboard.current.iconKey : ""
                                 visible: iconKey.length > 0
@@ -347,7 +350,7 @@ ApplicationWindow {
                     }
                 }
 
-                Panel { Layout.fillWidth: true; Layout.preferredHeight: 176
+                Panel { Layout.fillWidth: true; Layout.preferredHeight: 164
                     ColumnLayout { anchors.fill: parent; spacing: 8
                         PanelTitle { text: qsTr("AIR QUALITY") }
                         Text {
