@@ -21,8 +21,8 @@ void QtWeatherAcquisition::fetchForecast(const Location &location, bool fahrenhe
     q.addQueryItem("forecast_days", "7");
     q.addQueryItem("temperature_unit", fahrenheit ? "fahrenheit" : "celsius");
     q.addQueryItem("wind_speed_unit", fahrenheit ? "mph" : "kmh");
-    q.addQueryItem("current", "temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m,wind_direction_10m");
-    q.addQueryItem("hourly", "temperature_2m,precipitation_probability,weather_code,relative_humidity_2m,uv_index");
+    q.addQueryItem("current", "temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,is_day,weather_code,wind_speed_10m,wind_direction_10m,uv_index");
+    q.addQueryItem("hourly", "temperature_2m,precipitation_probability,weather_code,relative_humidity_2m,uv_index,is_day");
     q.addQueryItem("daily", "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,uv_index_max");
     url.setQuery(q);
 

@@ -1,1 +1,21 @@
-<RCC><qresource prefix="/"><file alias="Main.qml">Main.qml</file><file alias="i18n/en.json">i18n/en.json</file></qresource></RCC>
+<RCC>
+    <qresource prefix="/">
+        <file alias="Main.qml">Main.qml</file>
+        <file alias="i18n/en.json">i18n/en.json</file>
+    </qresource>
+    <qresource prefix="/icons">
+        <file alias="weather-clear-day.png">icons/weather-clear-day.png</file>
+        <file alias="weather-clear-night.png">icons/weather-clear-night.png</file>
+        <file alias="weather-partly-day.png">icons/weather-partly-day.png</file>
+        <file alias="weather-partly-night.png">icons/weather-partly-night.png</file>
+        <file alias="weather-cloudy.png">icons/weather-cloudy.png</file>
+        <file alias="weather-fog.png">icons/weather-fog.png</file>
+        <file alias="weather-drizzle.png">icons/weather-drizzle.png</file>
+        <file alias="weather-rain.png">icons/weather-rain.png</file>
+        <file alias="weather-sleet.png">icons/weather-sleet.png</file>
+        <file alias="weather-snow.png">icons/weather-snow.png</file>
+        <file alias="weather-thunder.png">icons/weather-thunder.png</file>
+        <file alias="drop.png">icons/drop.png</file>
+        <file alias="pin.png">icons/pin.png</file>
+    </qresource>
+</RCC>

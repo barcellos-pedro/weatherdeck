@@ -35,6 +35,7 @@ void Backend::setupConnections() {
     connect(&m_snapshotCoordinator, &DashboardSnapshotCoordinator::snapshotReady, this, [this](const DashboardSnapshotData &data) {
         m_dashboardState.applySnapshot(data);
         m_dashboardState.setPinned(m_savedLocations.isPinned(data.location));
+        syncPinState();
     });
 
     connect(&m_snapshotCoordinator, &DashboardSnapshotCoordinator::snapshotFailed, this, [this](const QString &err) {
@@ -48,11 +49,13 @@ void Backend::setupConnections() {
     // Saved Locations -> Snapshot Coordinator & Dashboard State
     connect(&m_savedLocations, &SavedLocations::currentChanged, this, [this](const Location &loc) {
         m_dashboardState.setPinned(m_savedLocations.isCurrentPinned());
+        syncPinState();
         m_snapshotCoordinator.requestSnapshot(loc, m_savedLocations.fahrenheit());
     });
 
     connect(&m_savedLocations, &SavedLocations::pinsChanged, this, [this]() {
         m_dashboardState.setPinned(m_savedLocations.isCurrentPinned());
+        syncPinState();
     });
 
     connect(&m_savedLocations, &SavedLocations::fahrenheitChanged, this, [this](bool fahrenheit) {
@@ -132,4 +135,40 @@ void Backend::togglePin() {
 
 void Backend::cyclePin(int direction) {
     m_savedLocations.cyclePin(direction);
+}
+
+void Backend::selectPin(int index) {
+    const auto pins = m_savedLocations.pins();
+    if (index >= 0 && index < pins.size()) {
+        m_savedLocations.setCurrent(pins[index], true);
+    }
+}
+
+void Backend::unpinAt(int index) {
+    const auto pins = m_savedLocations.pins();
+    if (index >= 0 && index < pins.size()) {
+        m_savedLocations.removePin(pins[index]);
+    }
+}
+
+QString Backend::airQualityBandKey(double aqi) {
+    return DashboardModel::airQualityBandKey(aqi);
+}
+
+double Backend::airQualityBarFraction(double aqi) {
+    return DashboardModel::airQualityBarFraction(aqi);
+}
+
+void Backend::syncPinState() {
+    QVariantList list;
+    const auto pins = m_savedLocations.pins();
+    int active = -1;
+    for (int i = 0; i < pins.size(); ++i) {
+        if (pins[i].isSameLocation(m_savedLocations.current())) active = i;
+        QVariantMap entry = pins[i].toVariantMap();
+        entry.insert("index", i);
+        list.append(entry);
+    }
+    m_dashboardState.setPins(list);
+    m_dashboardState.setActivePinIndex(active);
 }

@@ -28,6 +28,11 @@ public:
     Q_INVOKABLE void toggleUnits();
     Q_INVOKABLE void togglePin();
     Q_INVOKABLE void cyclePin(int direction);
+    Q_INVOKABLE void selectPin(int index);
+    Q_INVOKABLE void unpinAt(int index);
+    // EU AQI helpers, exposed for the air-quality card in QML
+    Q_INVOKABLE static QString airQualityBandKey(double aqi);
+    Q_INVOKABLE static double airQualityBarFraction(double aqi);
 
 signals:
     void searchResultsChanged();
@@ -35,6 +40,7 @@ signals:
 private:
     void setupConnections();
     void locate();
+    void syncPinState();
 
     bool m_ownsAcquisition = false;
     bool m_ownsStorage = false;

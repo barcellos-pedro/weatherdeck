@@ -10,9 +10,23 @@ void DashboardState::setLocationName(const QString &name) {
     }
 }
 
+void DashboardState::setCoordinates(const QString &coordinates) {
+    if (m_coordinates != coordinates) {
+        m_coordinates = coordinates;
+        emit changed();
+    }
+}
+
 void DashboardState::setUpdated(const QString &updated) {
     if (m_updated != updated) {
         m_updated = updated;
+        emit changed();
+    }
+}
+
+void DashboardState::setUpdatedAt(qint64 epochSeconds) {
+    if (m_updatedAt != epochSeconds) {
+        m_updatedAt = epochSeconds;
         emit changed();
     }
 }
@@ -45,6 +59,27 @@ void DashboardState::setPinned(bool pinned) {
     }
 }
 
+void DashboardState::setGeneration(quint64 generation) {
+    if (m_generation != generation) {
+        m_generation = generation;
+        emit changed();
+    }
+}
+
+void DashboardState::setPins(const QVariantList &pins) {
+    if (m_pins != pins) {
+        m_pins = pins;
+        emit changed();
+    }
+}
+
+void DashboardState::setActivePinIndex(int index) {
+    if (m_activePinIndex != index) {
+        m_activePinIndex = index;
+        emit changed();
+    }
+}
+
 void DashboardState::setCurrent(const CurrentConditions &current) {
     m_current = current;
     emit changed();
@@ -73,7 +108,10 @@ void DashboardState::setDaily(const QList<DailyForecast> &daily) {
 
 void DashboardState::applySnapshot(const DashboardSnapshotData &snapshot) {
     m_locationName = snapshot.locationName;
+    m_coordinates = snapshot.location.coordinateDisplay();
     m_updated = snapshot.updated;
+    m_updatedAt = snapshot.updatedAt;
+    m_generation = snapshot.generation;
     m_status = snapshot.status;
     m_loading = snapshot.loading;
     m_fahrenheit = snapshot.fahrenheit;

@@ -2,6 +2,7 @@
 #include <QJsonObject>
 #include <QString>
 #include <QVariantMap>
+#include <cmath>
 
 struct Location {
     QString name;
@@ -26,6 +27,14 @@ struct Location {
     QString displayName() const {
         if (country.trimmed().isEmpty()) return name;
         return name + ", " + country;
+    }
+
+    // Human-readable coordinates, e.g. "35.6762°N, 139.6503°E"
+    QString coordinateDisplay() const {
+        const QString latStr = QString::number(std::abs(lat), 'f', 4);
+        const QString lonStr = QString::number(std::abs(lon), 'f', 4);
+        return QString("%1°%2, %3°%4")
+            .arg(latStr, lat >= 0 ? "N" : "S", lonStr, lon >= 0 ? "E" : "W");
     }
 
     QJsonObject toJson() const {

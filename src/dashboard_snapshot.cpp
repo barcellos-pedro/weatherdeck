@@ -54,6 +54,8 @@ void DashboardSnapshotCoordinator::requestSnapshot(const Location &location, boo
         data.location = location;
         data.locationName = location.displayName();
         data.updated = QLocale().toString(QDateTime::currentDateTime(), QLocale::ShortFormat);
+        data.updatedAt = QDateTime::currentSecsSinceEpoch();
+        data.generation = gen;
         data.loading = false;
         data.fahrenheit = fahrenheit;
         data.current = ctx->current;
@@ -83,6 +85,8 @@ void DashboardSnapshotCoordinator::requestSnapshot(const Location &location, boo
             data.location = location;
             data.locationName = location.displayName();
             data.updated = QLocale().toString(QDateTime::currentDateTime(), QLocale::ShortFormat);
+            data.updatedAt = QDateTime::currentSecsSinceEpoch();
+            data.generation = gen;
             data.loading = false;
             data.fahrenheit = fahrenheit;
             data.current = ctx->current;

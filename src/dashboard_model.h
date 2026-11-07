@@ -13,9 +13,12 @@ struct CurrentConditions {
     Q_PROPERTY(double rain MEMBER rain)
     Q_PROPERTY(double wind MEMBER wind)
     Q_PROPERTY(double direction MEMBER direction)
+    Q_PROPERTY(double uv MEMBER uv)
     Q_PROPERTY(int code MEMBER code)
+    Q_PROPERTY(bool isDay MEMBER isDay)
     Q_PROPERTY(QString condition MEMBER condition)
     Q_PROPERTY(QString glyph MEMBER glyph)
+    Q_PROPERTY(QString iconKey MEMBER iconKey)
     Q_PROPERTY(QString tempUnit MEMBER tempUnit)
     Q_PROPERTY(QString windUnit MEMBER windUnit)
     Q_PROPERTY(bool valid MEMBER valid)
@@ -26,9 +29,12 @@ public:
     double rain = 0.0;
     double wind = 0.0;
     double direction = 0.0;
+    double uv = 0.0;
     int code = 0;
+    bool isDay = true;
     QString condition;
     QString glyph;
+    QString iconKey;
     QString tempUnit;
     QString windUnit;
     bool valid = false;
@@ -42,14 +48,18 @@ struct HourlyForecast {
     Q_PROPERTY(double rain MEMBER rain)
     Q_PROPERTY(double humidity MEMBER humidity)
     Q_PROPERTY(double uv MEMBER uv)
+    Q_PROPERTY(bool isDay MEMBER isDay)
     Q_PROPERTY(QString glyph MEMBER glyph)
+    Q_PROPERTY(QString iconKey MEMBER iconKey)
 public:
     QString time;
     double temp = 0.0;
     double rain = 0.0;
     double humidity = 0.0;
     double uv = 0.0;
+    bool isDay = true;
     QString glyph;
+    QString iconKey;
 };
 Q_DECLARE_METATYPE(HourlyForecast)
 
@@ -61,6 +71,7 @@ struct DailyForecast {
     Q_PROPERTY(double rain MEMBER rain)
     Q_PROPERTY(double uv MEMBER uv)
     Q_PROPERTY(QString glyph MEMBER glyph)
+    Q_PROPERTY(QString iconKey MEMBER iconKey)
     Q_PROPERTY(QString condition MEMBER condition)
 public:
     QString date;
@@ -69,6 +80,7 @@ public:
     double rain = 0.0;
     double uv = 0.0;
     QString glyph;
+    QString iconKey;
     QString condition;
 };
 Q_DECLARE_METATYPE(DailyForecast)
@@ -88,6 +100,12 @@ Q_DECLARE_METATYPE(AirQuality)
 namespace DashboardModel {
     QString conditionForCode(int code);
     QString glyphForCode(int code);
+    QString iconKeyForCode(int code, bool day);
+
+    // EU AQI bands: "good" 0-20, "fair" 20-40, "moderate" 40-60,
+    // "poor" 60-80, "very-poor" 80-100, "extreme" above 100.
+    QString airQualityBandKey(double aqi);
+    double airQualityBarFraction(double aqi);
 
     bool parseForecastPayload(const QByteArray &body,
                               CurrentConditions *current,
