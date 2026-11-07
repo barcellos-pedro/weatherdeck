@@ -4,6 +4,7 @@
 #include "dashboard_snapshot.h"
 #include "dashboard_state.h"
 #include "location.h"
+#include "saved_locations.h"
 #include "weather_acquisition.h"
 
 class WeatherdeckTests : public QObject {
@@ -355,6 +356,108 @@ private slots:
         // Loc B should be received
         QCOMPARE(emittedLocations.size(), 1);
         QCOMPARE(emittedLocations[0], QString("CityB"));
+    }
+
+    void savedLocationsDeduplication() {
+        InMemoryLocationStorage storage;
+        SavedLocations saved(&storage);
+
+        Location loc1;
+        loc1.name = "Paris";
+        loc1.lat = 48.85661;
+        loc1.lon = 2.35222;
+
+        Location loc2;
+        loc2.name = "Paris Exact";
+        loc2.lat = 48.85664; // Same up to 4 decimals: 48.8566, 2.3522
+        loc2.lon = 2.35221;
+
+        saved.addPin(loc1);
+        QCOMPARE(saved.pins().size(), 1);
+
+        saved.addPin(loc2);
+        // Deduplicated because normalized key matches
+        QCOMPARE(saved.pins().size(), 1);
+        QVERIFY(saved.isPinned(loc1));
+        QVERIFY(saved.isPinned(loc2));
+    }
+
+    void savedLocationsPinningAndUnpinning() {
+        InMemoryLocationStorage storage;
+        SavedLocations saved(&storage);
+
+        Location loc;
+        loc.name = "Berlin";
+        loc.lat = 52.52;
+        loc.lon = 13.405;
+
+        QVERIFY(!saved.isPinned(loc));
+
+        // Toggle on
+        saved.togglePin(loc);
+        QVERIFY(saved.isPinned(loc));
+        QCOMPARE(saved.pins().size(), 1);
+
+        // Toggle off
+        saved.togglePin(loc);
+        QVERIFY(!saved.isPinned(loc));
+        QCOMPARE(saved.pins().size(), 0);
+    }
+
+    void savedLocationsCycling() {
+        InMemoryLocationStorage storage;
+        SavedLocations saved(&storage);
+
+        Location loc1; loc1.name = "A"; loc1.lat = 1.0; loc1.lon = 1.0;
+        Location loc2; loc2.name = "B"; loc2.lat = 2.0; loc2.lon = 2.0;
+        Location loc3; loc3.name = "C"; loc3.lat = 3.0; loc3.lon = 3.0;
+
+        saved.addPin(loc1);
+        saved.addPin(loc2);
+        saved.addPin(loc3);
+
+        saved.setCurrent(loc1);
+
+        // Cycle forward: A -> B
+        saved.cyclePin(1);
+        QCOMPARE(saved.current().name, QString("B"));
+
+        // Cycle forward: B -> C
+        saved.cyclePin(1);
+        QCOMPARE(saved.current().name, QString("C"));
+
+        // Cycle forward: C -> A (wrap-around)
+        saved.cyclePin(1);
+        QCOMPARE(saved.current().name, QString("A"));
+
+        // Cycle backward: A -> C (wrap-around)
+        saved.cyclePin(-1);
+        QCOMPARE(saved.current().name, QString("C"));
+    }
+
+    void savedLocationsRestoreAndPersistence() {
+        InMemoryLocationStorage storage;
+
+        Location currentLoc; currentLoc.name = "Rome"; currentLoc.lat = 41.9; currentLoc.lon = 12.5;
+        Location pinLoc; pinLoc.name = "Milan"; pinLoc.lat = 45.46; pinLoc.lon = 9.19;
+
+        {
+            SavedLocations saved(&storage);
+            saved.setCurrent(currentLoc);
+            saved.addPin(pinLoc);
+            saved.setFahrenheit(true);
+        }
+
+        // Restore in a fresh instance
+        {
+            SavedLocations fresh(&storage);
+            fresh.restore();
+
+            QCOMPARE(fresh.current().name, QString("Rome"));
+            QCOMPARE(fresh.pins().size(), 1);
+            QCOMPARE(fresh.pins()[0].name, QString("Milan"));
+            QVERIFY(fresh.fahrenheit());
+        }
     }
 };
 
