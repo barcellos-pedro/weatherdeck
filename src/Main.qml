@@ -55,7 +55,7 @@ ApplicationWindow {
                 Frame { Layout.fillWidth: true; Layout.fillHeight: true
                     Column { anchors.fill: parent; spacing: 10; Text { text: qsTr("7-DAY OUTLOOK"); color: "#e4a0a5"; font.bold: true; font.family: "monospace" }
                         ListView { width: parent.width; height: parent.height-30; orientation: ListView.Horizontal; spacing: 9; model: backend.dashboard.daily
-                            delegate: Rectangle { width: Math.max(92, (parent.width-54)/7); height: parent.height; color: index % 2 ? "#211b2d" : "#17251f"; radius: Math.min(3,theme.radius)
+                            delegate: Rectangle { width: Math.max(92, (ListView.view.width-54)/7); height: parent.height; color: index % 2 ? "#211b2d" : "#17251f"; radius: Math.min(3,theme.radius)
                                 Column { anchors.centerIn: parent; spacing: 7; Text { text: Qt.formatDate(new Date(modelData.date+"T12:00:00"), "ddd"); color: "#c9c1c7"; font.family: "monospace" } Text { text: modelData.glyph; color: "#d3ab68"; font.pixelSize: 24 } Text { text: Number(modelData.max).toFixed(0)+"°"; color: "#f4e9e5"; font.family: "monospace" } Text { text: Number(modelData.min).toFixed(0)+"°"; color: cDim; font.family: "monospace" } Text { text: modelData.rain+"% rain"; color: cAccentStr; font.family: "monospace"; font.pixelSize: 11 } Text { text: "UV "+Number(modelData.uv).toFixed(0); color: "#d3ab68"; font.family: "monospace"; font.pixelSize: 11 } }
                             }
                         }
