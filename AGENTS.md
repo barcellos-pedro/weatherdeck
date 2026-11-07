@@ -3,6 +3,7 @@
 ## Project Structure & Module Organization
 
 Weatherdeck is a native Qt 6 / Qt Quick Omarchy application. Application logic resides in the flat `src/` directory structured around domain modules and abstract seams:
+
 - `backend.*` — lean presentation mediator facade exposed to QML via `backend`.
 - `dashboard_model.*` & `location.*` — typed domain models (`CurrentConditions`, `HourlyForecast`, `DailyForecast`, `AirQuality`, `Location`) and safe Open-Meteo payload parsers with series alignment checks.
 - `dashboard_state.*` — `DashboardState` QObject carrying the coherent presentation snapshot for QML bindings.

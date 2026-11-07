@@ -56,12 +56,14 @@ flowchart TD
 ## 2. Module Responsibilities
 
 ### Presentation Layer (`src/Main.qml`)
+
 - Declarative Qt Quick user interface with dark theme and monospace typography.
 - Owns keyboard navigation (`/` search, `r` refresh, `c`/`f` units, `p` pin, `Tab`/`Shift+Tab` cycle, `?` help, `q` quit).
 - Binds directly to `backend.dashboard` and its structured sub-properties (`current`, `airQuality`, `hourly`, `daily`).
 - Contains zero network, persistence, or parsing logic.
 
 ### Presentation Mediator (`src/backend.*`)
+
 - The single QML-facing facade registered as a context property (`backend`).
 - Exposes:
   - `dashboard`: Read-only pointer to `DashboardState`.
@@ -71,6 +73,7 @@ flowchart TD
 - Implements dependency injection for zero-network testing.
 
 ### Domain Models & Parser (`src/location.*`, `src/dashboard_model.*`, `src/dashboard_state.*`)
+
 - **`Location`**: Geographic place identity defined by fixed-precision coordinates (`lat`, `lon` at 4 decimal places). Implements deduplication and equality checking.
 - **`CurrentConditions`**: Typed gadget containing temperature, apparent temperature, humidity, precipitation, wind speed/direction, weather code, descriptive text, and weather glyphs.
 - **`HourlyForecast` & `DailyForecast`**: Typed gadgets for time-series projections. Includes alignment validation across parallel arrays (`time`, `temperature_2m`, `precipitation_probability`, `weather_code`, `relative_humidity_2m`, `uv_index`) to guard against truncated or malformed responses.
@@ -78,22 +81,26 @@ flowchart TD
 - **`DashboardState`**: `QObject` holding the active display snapshot and emitting granular updates.
 
 ### Dashboard Snapshot Coordinator (`src/dashboard_snapshot.*`)
+
 - Coordinates the acquisition of forecast and air quality data for a given `Location` and temperature unit.
 - Implements **generation tracking** (`m_generation`) to drop stale network responses if the user rapidly switches locations or toggles units.
 - Implements **graceful degradation**: if the air-quality service is down or returns an error, the forecast is preserved and emitted with `airQuality.available = false`.
 
 ### Saved Locations (`src/saved_locations.*`)
+
 - Manages bookmarks (pins) and the currently selected location.
 - Enforces deduplication using `Location::normalizedKey()`.
 - Implements wrap-around cycling (`cyclePin(+1)` and `cyclePin(-1)`).
 - Interacts strictly with the abstract `LocationStorage` seam.
 
 ### Acquisition Seam (`src/weather_acquisition.*`)
+
 - **`WeatherAcquisition`**: Abstract interface for all external HTTP communication.
 - **`QtWeatherAcquisition`**: Production adapter executing asynchronous requests against Open-Meteo forecast, Open-Meteo air quality, Open-Meteo geocoding, and ipwho.is.
 - **`FakeWeatherAcquisition`**: Test adapter providing canned responses, manual trigger controls, and failure simulation without opening network sockets.
 
 ### Storage Seam (`src/saved_locations.*`)
+
 - **`LocationStorage`**: Abstract interface for settings persistence.
 - **`QSettingsLocationStorage`**: Production adapter reading and writing to `~/.config/omarchy/weatherdeck.conf`.
 - **`InMemoryLocationStorage`**: Test adapter holding state purely in RAM.
